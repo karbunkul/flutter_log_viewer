@@ -6,6 +6,7 @@ class LogViewerScope extends InheritedWidget {
   final ValueNotifier<List<LogRecord>> logs;
   final VoidCallback clear;
   final StackTraceBuilder stackTraceBuilder;
+  final Formatter formatter;
 
   const LogViewerScope({
     Key? key,
@@ -13,6 +14,7 @@ class LogViewerScope extends InheritedWidget {
     required this.logs,
     required this.clear,
     required this.stackTraceBuilder,
+    required this.formatter,
   }) : super(key: key, child: child);
 
   static LogViewerScope of(BuildContext context) {
@@ -28,6 +30,6 @@ class LogViewerScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(LogViewerScope old) {
-    return true;
+    return false;
   }
 }

@@ -17,22 +17,20 @@ class _LogViewerConsumerState extends State<LogViewerConsumer> {
     scope.logs.addListener(_listener);
   }
 
-  @override
-  void dispose() {
-    scope.logs.removeListener(_listener);
-    super.dispose();
-  }
-
-  _listener() {
-    Future.delayed(Duration.zero, () {
-      setState(() {});
-    });
-  }
-
   LogViewerScope get scope => LogViewerScope.of(context);
 
   @override
-  Widget build(BuildContext context) {
-    return widget.builder(context, scope);
+  void deactivate() {
+    super.deactivate();
+    scope.logs.removeListener(_listener);
+  }
+
+  _listener() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext _) {
+    return widget.builder(_, scope);
   }
 }

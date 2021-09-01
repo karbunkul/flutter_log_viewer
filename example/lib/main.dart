@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_json_viewer/flutter_json_viewer.dart';
 import 'package:log_viewer/log_viewer.dart';
 import 'package:logging/logging.dart';
 
@@ -14,6 +17,9 @@ class MyApp extends StatelessWidget {
       home: HomePage(),
       builder: (_, child) => LogViewer(
         child: child!,
+        formatters: [
+          MapLogErrorFormatter(),
+        ],
         logLevel: Level.ALL,
         stackTraceBuilder: (_, stack) {
           var index = 0;
@@ -51,16 +57,40 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Demo'),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => ViewerPage()));
+              },
+              icon: Icon(Icons.featured_play_list_outlined))
+        ],
+      ),
+    );
+  }
+}
+
+class ViewerPage extends StatelessWidget {
+  const ViewerPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return LogViewerConsumer(
       builder: (_, scope) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('console.log ))'),
+            title: Text(DateTime.now().toIso8601String()),
             actions: [
               IconButton(
                 onPressed: () {
                   scope.clear();
-                  Logger('actions').info('tap clear button');
+                  Logger('actions').info('tap clear button', {
+                    'hello': 'world',
+                    'items': [1, 2, 3, 4]
+                  });
                 },
                 icon: Icon(Icons.clear),
               )
@@ -106,6 +136,7 @@ class HomePage extends StatelessWidget {
       BuildContext context, LogRecord event, LogViewerScope scope) {
     if (event.stackTrace != null || event.error != null) {
       return () {
+        var formatter = scope.formatter(event.error);
         showModalBottomSheet(
             context: context,
             builder: (__) {
@@ -114,9 +145,10 @@ class HomePage extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Text(event.error.toString()),
+                      formatter.build(__, event.error),
                       SizedBox(height: 12),
                       scope.stackTraceBuilder(__, event.stackTrace),
+                      // Text(formatter.export(event.error)),
                     ],
                   ),
                 ),
@@ -126,5 +158,23 @@ class HomePage extends StatelessWidget {
     }
 
     return null;
+  }
+}
+
+class MapLogErrorFormatter extends LogErrorFormatter {
+  @override
+  Widget build(BuildContext context, value) {
+    return JsonViewer(value);
+  }
+
+  @override
+  String export(value) {
+    JsonEncoder encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert(value);
+  }
+
+  @override
+  bool hasApply(value) {
+    return value is Map;
   }
 }
